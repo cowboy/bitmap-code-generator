@@ -1,6 +1,7 @@
 .table {
   --cell-size: 30px;
   border-collapse: collapse;
+  border-spacing: 0;
   background: #000;
 }
 
@@ -10,11 +11,12 @@
 }
 
 .cell {
-  display: inline-block;
   width: var(--cell-size);
   background: #222;
   border: 1px solid #000;
   border-radius: calc(var(--cell-size) / 3);
+  margin: 0;
+  padding: 0;
 }
 
 .cell.on {

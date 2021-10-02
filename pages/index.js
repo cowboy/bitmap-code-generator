@@ -11,6 +11,7 @@ import {
   validateBitmap,
   validateCode,
   validateDimensions,
+  validateScale,
 } from 'components/transforms'
 
 import styles from '../styles/Home.module.css'
@@ -22,18 +23,23 @@ const getStateFromPreset = (name, array, format) =>
   transform({ name, array, format })(
     validateDimensions,
     validateCode,
-    validateBitmap
+    validateBitmap,
+    validateScale
   )
 
-const initialState = getStateFromPreset(
-  defaultPreset,
-  getDefaultPreset(defaultPreset),
-  defaultFormatter
-)
+const initialState = {
+  ...getStateFromPreset(
+    defaultPreset,
+    getDefaultPreset(defaultPreset),
+    defaultFormatter
+  ),
+}
 
 const reducer = (state, { name, value }) => {
   const transformer = transform({ ...state, [name]: value })
   switch (name) {
+    case 'scale':
+      return transformer(validateScale)
     case 'bitmap':
       return transformer(parseBitmap, validateDimensions, validateCode)
     case 'code':
@@ -42,7 +48,7 @@ const reducer = (state, { name, value }) => {
     case 'format':
       return transformer(validateCode)
     case 'preset':
-      return getStateFromPreset(...value, state.format)
+      return { ...state, ...getStateFromPreset(...value, state.format) }
     default:
       return state
   }
@@ -53,7 +59,6 @@ export default function Home() {
   const update = useForceUpdate()
 
   const handleChange = (name) => (event) => {
-    console.log(name, event.target.value)
     const value = event.target.value
     dispatch({ name, value })
   }
@@ -98,7 +103,11 @@ export default function Home() {
         <textarea value={state.bitmap} onChange={handleChange('bitmap')} />
       </label> */}
       <h3>Bitmap</h3>
-      <Bitmap {...state} onChange={handleChange('bitmap')} />
+      <Bitmap
+        {...state}
+        onChange={handleChange('bitmap')}
+        onScale={handleChange('scale')}
+      />
       <label>
         <h3>Code format</h3>
         <select onChange={handleChange('format')}>

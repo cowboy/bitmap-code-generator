@@ -1,15 +1,14 @@
 import * as React from 'react'
 import cx from 'classnames'
-import { getWidth, widthMultiple } from './transforms'
+import { getSize, sizeMultiple } from './transforms'
 
 import styles from './Bitmap.module.css'
 
-export const Bitmap = ({ bitmap, width, onChange }) => {
+export const Bitmap = ({ bitmap, width, scale, onChange, onScale }) => {
   const [dragState, setDragState] = React.useState(null)
 
   const bitmap2arr = (bitmap) =>
     bitmap.split('\n').map((line) => {
-      console.log(line.length, width)
       if (line.length < width) {
         line += ' '.repeat(width - line.length)
       }
@@ -37,7 +36,6 @@ export const Bitmap = ({ bitmap, width, onChange }) => {
   }
 
   const mouseUp = (x, y) => () => {
-    console.log('mouseUp', x, y)
     setDragState(null)
   }
 
@@ -63,16 +61,58 @@ export const Bitmap = ({ bitmap, width, onChange }) => {
   const shiftD = updater((arr) => [...arr.slice(-1), ...arr.slice(0, -1)])
   const incW = updater((arr) => arr.map((row) => [...row, false]))
   const decW = updater((arr) => {
-    const width = getWidth(arr.map((row) => row.length))
-    const newWidth = Math.floor((width - 1) / widthMultiple) * widthMultiple
+    const width = getSize(arr.map((row) => row.length))
+    const newWidth = Math.floor((width - 1) / sizeMultiple) * sizeMultiple
     if (newWidth !== 0) {
       return arr.map((row) => row.slice(0, newWidth))
     }
   })
+  const incH = updater((arr) => [
+    ...arr,
+    ...Array.from({ length: sizeMultiple }, () =>
+      Array.from({ length: sizeMultiple }, () => false)
+    ),
+  ])
+  const decH = updater((arr) => {
+    const height = arr.length
+    const newHeight = Math.floor((height - 1) / sizeMultiple) * sizeMultiple
+    if (newHeight !== 0) {
+      return arr.slice(0, newHeight)
+    }
+  })
+
+  const setScale = (multiplier) => () => {
+    const value = multiplier * scale
+    onScale({ target: { value } })
+  }
 
   return (
     <>
-      <table className={styles.table} onMouseLeave={mouseLeave}>
+      <div className={styles.buttons}>
+        <button onClick={clear}>clear</button>
+        <button onClick={invert}>invert</button>
+        <span>move</span>
+        <button onClick={shiftL}>⇦</button>
+        <button onClick={shiftD}>⇩</button>
+        <button onClick={shiftU}>⇧</button>
+        <button onClick={shiftR}>⇨</button>
+        <span>width</span>
+        <button onClick={decW}>-{sizeMultiple}</button>
+        <button onClick={incW}>+{sizeMultiple}</button>
+        <span>height</span>
+        <button onClick={decH}>-{sizeMultiple}</button>
+        <button onClick={incH}>+{sizeMultiple}</button>
+        <span>pixel scale (preview only)</span>
+        <button onClick={setScale(0.5)}>⇩</button>
+        <button onClick={setScale(2)}>⇧</button>
+      </div>
+      <style>{`.${styles.table} { --cell-size: ${30 * scale}px; }`}</style>
+      <table
+        className={styles.table}
+        onMouseLeave={mouseLeave}
+        cellSpacing="0"
+        cellPadding="0"
+      >
         {bitmap2arr(bitmap).map((arr, y) => (
           <tr key={y} className={styles.row}>
             {arr.map((pixel, x) => (
@@ -87,18 +127,6 @@ export const Bitmap = ({ bitmap, width, onChange }) => {
           </tr>
         ))}
       </table>
-      <div className={styles.buttons}>
-        <button onClick={clear}>clear</button>
-        <button onClick={invert}>invert</button>
-        <span>move</span>
-        <button onClick={shiftL}>⇦</button>
-        <button onClick={shiftU}>⇧</button>
-        <button onClick={shiftD}>⇩</button>
-        <button onClick={shiftR}>⇨</button>
-        <span>width</span>
-        <button onClick={decW}>⟽</button>
-        <button onClick={incW}>⟾</button>
-      </div>
     </>
   )
 }
