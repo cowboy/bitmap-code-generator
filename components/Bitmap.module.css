@@ -1,0 +1,30 @@
+.table {
+  --cell-size: 30px;
+  border-collapse: collapse;
+  background: #000;
+}
+
+.row
+.cell {
+  height: var(--cell-size);
+}
+
+.cell {
+  display: inline-block;
+  width: var(--cell-size);
+  background: #222;
+  border: 1px solid #000;
+  border-radius: calc(var(--cell-size) / 3);
+}
+
+.cell.on {
+  background: #f00;
+}
+
+.buttons {
+  margin: 0.5em 0.5em 0.5em 0;
+}
+
+.buttons span {
+  padding: 0 0.5em 0 1em;
+}
