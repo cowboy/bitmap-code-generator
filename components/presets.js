@@ -1,5 +1,7 @@
 import store from 'store2'
-import { useForceUpdate } from './useForceUpdate'
+import { useForceUpdate } from '../src/useForceUpdate'
+
+import styles from './Presets.module.css'
 
 const presetStore = store.namespace('preset')
 
@@ -37,7 +39,8 @@ export const Presets = ({ onClick }) => {
         update()
       }
     } else {
-      onClick([name, getter(name)])
+      const array = getter(name)
+      onClick({ name, array })
     }
   }
   return (
@@ -50,7 +53,7 @@ export const Presets = ({ onClick }) => {
             .map((name) => (
               <button key={name} onClick={clickHandler(getPreset, name)}>
                 {name}
-                <span> ⮿</span>
+                <span className={styles.deletePreset}>⮿</span>
               </button>
             ))}
         </>

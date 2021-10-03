@@ -1,66 +1,25 @@
 import * as React from 'react'
 import Head from 'next/head'
-import { useForceUpdate } from 'components/useForceUpdate'
-import { getDefaultPreset, savePreset, Presets } from 'components/presets'
-import { formatters } from 'components/formatters'
+import NoSSR from 'react-no-ssr'
+import { initialState, reducer } from 'src/reducer'
+import { useForceUpdate } from 'src/useForceUpdate'
+import { formatters } from 'src/formatters'
+import { Presets, savePreset } from 'components/Presets'
 import { Bitmap } from 'components/Bitmap'
-import {
-  transform,
-  parseBitmap,
-  parseCode,
-  validateBitmap,
-  validateCode,
-  validateDimensions,
-  validateScale,
-} from 'components/transforms'
 
 import styles from '../styles/Home.module.css'
-
-const defaultPreset = 'robot'
-const defaultFormatter = 'C++ (GyverMAX7219)'
-
-const getStateFromPreset = (name, array, format) =>
-  transform({ name, array, format })(
-    validateDimensions,
-    validateCode,
-    validateBitmap,
-    validateScale
-  )
-
-const initialState = {
-  ...getStateFromPreset(
-    defaultPreset,
-    getDefaultPreset(defaultPreset),
-    defaultFormatter
-  ),
-}
-
-const reducer = (state, { name, value }) => {
-  const transformer = transform({ ...state, [name]: value })
-  switch (name) {
-    case 'scale':
-      return transformer(validateScale)
-    case 'bitmap':
-      return transformer(parseBitmap, validateDimensions, validateCode)
-    case 'code':
-      return transformer(parseCode, validateDimensions, validateBitmap)
-    case 'name':
-    case 'format':
-      return transformer(validateCode)
-    case 'preset':
-      return { ...state, ...getStateFromPreset(...value, state.format) }
-    default:
-      return state
-  }
-}
 
 export default function Home() {
   const [state, dispatch] = React.useReducer(reducer, initialState)
   const update = useForceUpdate()
 
-  const handleChange = (name) => (event) => {
-    const value = event.target.value
-    dispatch({ name, value })
+  const handleEventChange = (type) => (event) => {
+    const payload = event.target.value
+    dispatch({ type, payload })
+  }
+
+  const handleChange = (type) => (payload) => {
+    dispatch({ type, payload })
   }
 
   const save = () => {
@@ -69,11 +28,10 @@ export default function Home() {
   }
 
   return (
-    <div>
+    <NoSSR>
       <Head>
         <title>Bitmap ⇔ Code Generator</title>
         <meta name="description" content="Bitmap ⇔ Code Generator" />
-        <link rel="icon" href="/favicon.ico" />
       </Head>
       <h1>Bitmap ⇔ Code Generator</h1>
       <p>
@@ -82,18 +40,10 @@ export default function Home() {
         possibly other code that renders 8x8 bitmaps
       </p>
       <label>
-        <h3>Width</h3>
-        <input value={state.width} disabled />
-      </label>
-      <label>
-        <h3>Height</h3>
-        <input value={state.height} disabled />
-      </label>
-      <label>
         <h3>Name</h3>
         <input
           value={state.name}
-          onChange={handleChange('name')}
+          onChange={handleEventChange('name')}
           className="code"
         />{' '}
         <button onClick={save}>Save</button>
@@ -105,14 +55,14 @@ export default function Home() {
       <h3>Bitmap</h3>
       <Bitmap
         {...state}
-        onChange={handleChange('bitmap')}
-        onScale={handleChange('scale')}
+        onChangeBitmap={handleChange('bitmap')}
+        onChangeScale={handleChange('scale')}
       />
       <label>
         <h3>Code format</h3>
-        <select onChange={handleChange('format')}>
+        <select value={state.format} onChange={handleEventChange('format')}>
           {Object.keys(formatters).map((name) => (
-            <option key={name} value={name} selected={name === state.format}>
+            <option key={name} value={name}>
               {name}
             </option>
           ))}
@@ -122,19 +72,20 @@ export default function Home() {
         <h3>Code</h3>
         <textarea
           value={state.code}
-          onChange={handleChange('code')}
+          onChange={handleEventChange('code')}
           className="code"
         />
       </label>
-      <Presets onClick={(value) => dispatch({ name: 'preset', value })} />
-      {/* <div>state</div>
+      <Presets onClick={handleChange('preset')} />
+      {/* <h3>State</h3>
       <pre>{JSON.stringify(state, null, 2)}</pre> */}
       <p>
         Made by <a href="https://github.com/cowboy">cowboy</a> for{' '}
         <a href="https://www.theentirerobot.com/">The Entire Robot</a>. Source
         code on{' '}
-        <a href="https://github.com/cowboy/bitmap-code-generator">GitHub</a>.
+        <a href="https://github.com/cowboy/bitmap-code-generator">GitHub</a>,
+        patches welcome!
       </p>
-    </div>
+    </NoSSR>
   )
 }

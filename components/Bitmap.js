@@ -1,11 +1,72 @@
 import * as React from 'react'
+import Favicon from 'react-favicon'
 import cx from 'classnames'
-import { getSize, sizeMultiple } from './transforms'
+import {
+  arrayToBitmap,
+  roundSizeDownToMultiple,
+  roundSizeUpToMultiple,
+} from '../src/transforms'
 
 import styles from './Bitmap.module.css'
 
-export const Bitmap = ({ bitmap, width, scale, onChange, onScale }) => {
+const blackFavicon =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAklEQVR4AewaftIAAABzSURBVJ3BAXKCABAEsOz9/89bAXWgFqomQe0EtQka1Kkh9moT1E1dGuovdS1iMb5UtRhviTPjLXVmfCtW4y4+k1qNu3oV52ozLtT/xtdiMZ7iM7UYT3UQd3FliFUcFXFTr+JhqFWJX+pEPYydOoqdWMXRD7IJGR9tCTLHAAAAAElFTkSuQmCC'
+
+const bgBlank = [
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00,
+]
+const bgBorder = [
+  0x3ffc, 0x4002, 0x8001, 0x8001, 0x8001, 0x8001, 0x8001, 0x8001, 0x8001,
+  0x8001, 0x8001, 0x8001, 0x8001, 0x8001, 0x4002, 0x3ffc,
+]
+const bgMask = [
+  0x7ffe, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff,
+  0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0x7ffe,
+]
+
+export const Bitmap = ({
+  bitmap,
+  width,
+  height,
+  scale,
+  onChangeBitmap,
+  onChangeScale,
+}) => {
+  const widthMin = width === 8
+  const heightMin = height === 8
+
   const [dragState, setDragState] = React.useState(null)
+
+  const setScale = (multiplier) => () => {
+    onChangeScale(multiplier * scale)
+  }
+
+  const favicon = (canvas, ctx) => {
+    const size = 16
+    const arr = new Uint8ClampedArray(4 * size * size)
+    const setPixel = (x, y, state) => {
+      const i = (y * size + x) * 4
+      arr[i + 0] = state ? 255 : 0 // R value
+      arr[i + 1] = state ? 255 : 0 // G value
+      arr[i + 2] = state ? 255 : 0 // B value
+    }
+    const setAlpha = (x, y, alpha) => {
+      const i = (y * size + x) * 4
+      arr[i + 3] = alpha ? 255 : 0
+    }
+
+    const bg = widthMin && heightMin ? bgBorder : bgBlank
+    forEachPixel(arrayToBitmap({ array: bg }).bitmap, setPixel)
+    forEachPixel(arrayToBitmap({ array: bgMask }).bitmap, setAlpha)
+
+    forEachPixel(bitmap, (x, y, pixel) => {
+      setPixel(x + (widthMin ? 4 : 0), y + (heightMin ? 4 : 0), pixel)
+    })
+
+    const imageData = new ImageData(arr, 16, 16)
+    ctx.putImageData(imageData, 0, 0)
+  }
 
   const bitmap2arr = (bitmap) =>
     bitmap.split('\n').map((line) => {
@@ -20,112 +81,111 @@ export const Bitmap = ({ bitmap, width, scale, onChange, onScale }) => {
       .map((row) => row.map((pixel) => (pixel ? 'x' : ' ')).join(''))
       .join('\n')
 
+  const forEachPixel = (bitmap, fn) =>
+    bitmap2arr(bitmap).forEach((row, y) =>
+      row.forEach((pixel, x) => fn(x, y, pixel))
+    )
+
+  const update = (fn) => updater(fn)()
   const updater = (fn) => () => {
     const arr = bitmap2arr(bitmap)
-    const value = arr2bitmap(fn(arr) || arr)
-    onChange({ target: { value } })
+    onChangeBitmap(arr2bitmap(fn(arr) || arr))
   }
 
   const mouseDown = (x, y) => (event) => {
     event.preventDefault()
     let state
-    updater((arr) => {
+    update((arr) => {
       state = arr[y][x] = !arr[y][x]
-    })()
+    })
     setDragState(state)
-  }
-
-  const mouseUp = (x, y) => () => {
-    setDragState(null)
   }
 
   const mouseEnter = (x, y) => () => {
     if (dragState !== null) {
-      updater((arr) => {
+      update((arr) => {
         arr[y][x] = dragState
-      })()
+      })
     }
   }
 
-  const mouseLeave = () => {
-    setDragState(null)
-  }
+  React.useEffect(() => {
+    const handler = () => {
+      setDragState(null)
+    }
+    document.addEventListener('mouseup', handler, false)
+    return () => {
+      document.removeEventListener('mouseup', handler, false)
+    }
+  })
 
-  const clear = updater((arr) => arr.map((row) => row.map(() => false)))
-  const invert = updater((arr) => arr.map((row) => row.map((p) => !p)))
-  const shiftR = updater((arr) =>
-    arr.map((row) => [...row.slice(-1), ...row.slice(0, -1)])
-  )
-  const shiftL = updater((arr) => arr.map((row) => [...row.slice(1), row[0]]))
+  const map = (fn) => (arr) => arr.map(fn)
+
+  const clear = updater(map(map(() => false)))
+  const invert = updater(map(map((pixel) => !pixel)))
+
+  const shiftL = updater(map((row) => [...row.slice(1), row[0]]))
+  const shiftR = updater(map((row) => [...row.slice(-1), ...row.slice(0, -1)]))
   const shiftU = updater((arr) => [...arr.slice(1), arr[0]])
   const shiftD = updater((arr) => [...arr.slice(-1), ...arr.slice(0, -1)])
-  const incW = updater((arr) => arr.map((row) => [...row, false]))
-  const decW = updater((arr) => {
-    const width = getSize(arr.map((row) => row.length))
-    const newWidth = Math.floor((width - 1) / sizeMultiple) * sizeMultiple
-    if (newWidth !== 0) {
-      return arr.map((row) => row.slice(0, newWidth))
-    }
-  })
+
+  const sizeMultiple = roundSizeUpToMultiple(1)
+  const emptyCells = (length = sizeMultiple) =>
+    Array.from({ length }, () => false)
+
+  const incW = updater(map((row) => [...row, ...emptyCells()]))
+  const decW = updater(
+    map((row) => row.slice(0, roundSizeDownToMultiple(width - 1)))
+  )
   const incH = updater((arr) => [
     ...arr,
-    ...Array.from({ length: sizeMultiple }, () =>
-      Array.from({ length: sizeMultiple }, () => false)
-    ),
+    ...Array.from({ length: sizeMultiple }, () => emptyCells(width)),
   ])
-  const decH = updater((arr) => {
-    const height = arr.length
-    const newHeight = Math.floor((height - 1) / sizeMultiple) * sizeMultiple
-    if (newHeight !== 0) {
-      return arr.slice(0, newHeight)
-    }
-  })
-
-  const setScale = (multiplier) => () => {
-    const value = multiplier * scale
-    onScale({ target: { value } })
-  }
+  const decH = updater((arr) =>
+    arr.slice(0, roundSizeDownToMultiple(height - 1))
+  )
 
   return (
     <>
+      <Favicon url={blackFavicon} renderOverlay={favicon} />
       <div className={styles.buttons}>
         <button onClick={clear}>clear</button>
         <button onClick={invert}>invert</button>
-        <span>move</span>
+        <span className={styles.buttonHeader}>Move</span>
         <button onClick={shiftL}>⇦</button>
         <button onClick={shiftD}>⇩</button>
         <button onClick={shiftU}>⇧</button>
         <button onClick={shiftR}>⇨</button>
-        <span>width</span>
+        <span className={styles.buttonHeader}>Size</span>
+        <span>
+          {width}x{height}
+        </span>
+        <span className={styles.buttonHeader}>Width</span>
         <button onClick={decW}>-{sizeMultiple}</button>
         <button onClick={incW}>+{sizeMultiple}</button>
-        <span>height</span>
+        <span className={styles.buttonHeader}>Height</span>
         <button onClick={decH}>-{sizeMultiple}</button>
         <button onClick={incH}>+{sizeMultiple}</button>
-        <span>pixel scale (preview only)</span>
+        <span className={styles.buttonHeader}>Pixel scale</span>
         <button onClick={setScale(0.5)}>⇩</button>
         <button onClick={setScale(2)}>⇧</button>
       </div>
       <style>{`.${styles.table} { --cell-size: ${30 * scale}px; }`}</style>
-      <table
-        className={styles.table}
-        onMouseLeave={mouseLeave}
-        cellSpacing="0"
-        cellPadding="0"
-      >
-        {bitmap2arr(bitmap).map((arr, y) => (
-          <tr key={y} className={styles.row}>
-            {arr.map((pixel, x) => (
-              <td
-                key={x}
-                className={cx(styles.cell, { [styles.on]: pixel })}
-                onMouseDown={mouseDown(x, y)}
-                onMouseUp={mouseUp(x, y)}
-                onMouseEnter={mouseEnter(x, y)}
-              />
-            ))}
-          </tr>
-        ))}
+      <table className={styles.table}>
+        <tbody>
+          {bitmap2arr(bitmap).map((arr, y) => (
+            <tr key={y} className={styles.row}>
+              {arr.map((pixel, x) => (
+                <td
+                  key={x}
+                  className={cx(styles.cell, { [styles.on]: pixel })}
+                  onMouseDown={mouseDown(x, y)}
+                  onMouseEnter={mouseEnter(x, y)}
+                />
+              ))}
+            </tr>
+          ))}
+        </tbody>
       </table>
     </>
   )

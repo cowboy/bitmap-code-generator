@@ -1,5 +1,4 @@
 .table {
-  --cell-size: 30px;
   border-collapse: collapse;
   border-spacing: 0;
   background: #000;
@@ -15,8 +14,6 @@
   background: #222;
   border: 1px solid #000;
   border-radius: calc(var(--cell-size) / 3);
-  margin: 0;
-  padding: 0;
 }
 
 .cell.on {
@@ -27,6 +24,11 @@
   margin: 0.5em 0.5em 0.5em 0;
 }
 
-.buttons span {
-  padding: 0 0.5em 0 1em;
+.buttons > * {
+  margin-right: 0.5em;
+}
+
+.buttonHeader {
+  margin-left: 0.75em;
+  font-weight: 700;
 }
