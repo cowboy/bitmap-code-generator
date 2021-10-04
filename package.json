@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build && next export",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "yarn lint",
+    "prepare": "husky install"
   },
   "dependencies": {
     "next": "11.1.2",
@@ -18,7 +20,8 @@
   },
   "devDependencies": {
     "eslint": "7.32.0",
-    "eslint-config-next": "11.1.2"
+    "eslint-config-next": "11.1.2",
+    "husky": "^7.0.0"
   },
   "volta": {
     "node": "14.18.0",
