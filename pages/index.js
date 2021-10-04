@@ -76,7 +76,8 @@ export default function Home() {
       {/* <h3>State</h3>
       <pre>{JSON.stringify(state, null, 2)}</pre> */}
       <p>
-        Made by <a href="https://github.com/cowboy">"Cowboy" Ben Alman</a> for{' '}
+        Made by{' '}
+        <a href="http://benalman.com/">&ldquo;Cowboy&rdquo; Ben Alman</a> for{' '}
         <a href="https://www.theentirerobot.com/">The Entire Robot</a>. Source
         code on{' '}
         <a href="https://github.com/cowboy/bitmap-code-generator">GitHub</a>,
