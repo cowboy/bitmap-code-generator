@@ -126,7 +126,7 @@ const defaultScale = 1
 export const validateScale = ({
   scale = transformStore('scale') || defaultScale,
 }) => {
-  scale = Math.max(0.5, Math.min(scale, 2))
+  scale = Math.max(0.25, Math.min(scale, 2))
   transformStore('scale', scale)
   return { scale }
 }

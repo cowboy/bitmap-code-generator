@@ -45,6 +45,9 @@ const actionHandlers = {
       printBitmap
     )
   },
+  formatCode(state, code) {
+    return transform({ ...state, code })(getCode)
+  },
   name(state, name) {
     return transform({ ...state, name })(getCode)
   },

@@ -119,56 +119,66 @@ export const Bitmap = ({
     }
   })
 
+  const sizeMultiple = roundSizeUpToMultiple(1)
   const map = (fn) => (arr) => arr.map(fn)
+  const rotate = (i) => (arr) => [...arr.slice(i), ...arr.slice(0, i)]
+  const add = (fn) => (row) => [...row, ...fn()]
+  const remove = (size) => (arr) =>
+    arr.slice(0, roundSizeDownToMultiple(size - 1))
+  const cells =
+    (length, fn = () => false) =>
+    () =>
+      Array.from({ length }, fn)
 
   const clear = updater(map(map(() => false)))
   const invert = updater(map(map((pixel) => !pixel)))
 
-  const shiftL = updater(map((row) => [...row.slice(1), row[0]]))
-  const shiftR = updater(map((row) => [...row.slice(-1), ...row.slice(0, -1)]))
-  const shiftU = updater((arr) => [...arr.slice(1), arr[0]])
-  const shiftD = updater((arr) => [...arr.slice(-1), ...arr.slice(0, -1)])
+  const shiftL = updater(map(rotate(1)))
+  const shiftR = updater(map(rotate(-1)))
+  const shiftU = updater(rotate(1))
+  const shiftD = updater(rotate(-1))
 
-  const sizeMultiple = roundSizeUpToMultiple(1)
-  const emptyCells = (length = sizeMultiple) =>
-    Array.from({ length }, () => false)
-
-  const incW = updater(map((row) => [...row, ...emptyCells()]))
-  const decW = updater(
-    map((row) => row.slice(0, roundSizeDownToMultiple(width - 1)))
-  )
-  const incH = updater((arr) => [
-    ...arr,
-    ...Array.from({ length: sizeMultiple }, () => emptyCells(width)),
-  ])
-  const decH = updater((arr) =>
-    arr.slice(0, roundSizeDownToMultiple(height - 1))
-  )
+  const decW = updater(map(remove(width)))
+  const incW = updater(map(add(cells(sizeMultiple))))
+  const decH = updater(remove(height))
+  const incH = updater(add(cells(sizeMultiple, cells(width))))
 
   return (
     <>
       <Favicon url={blackFavicon} renderOverlay={favicon} />
       <div className={styles.buttons}>
-        <button onClick={clear}>clear</button>
-        <button onClick={invert}>invert</button>
-        <span className={styles.buttonHeader}>Move</span>
-        <button onClick={shiftL}>⇦</button>
-        <button onClick={shiftD}>⇩</button>
-        <button onClick={shiftU}>⇧</button>
-        <button onClick={shiftR}>⇨</button>
-        <span className={styles.buttonHeader}>Size</span>
-        <span>
-          {width}x{height}
+        <span className={styles.buttonGroup}>
+          <button onClick={clear}>clear</button>
+          <button onClick={invert}>invert</button>
         </span>
-        <span className={styles.buttonHeader}>Width</span>
-        <button onClick={decW}>-{sizeMultiple}</button>
-        <button onClick={incW}>+{sizeMultiple}</button>
-        <span className={styles.buttonHeader}>Height</span>
-        <button onClick={decH}>-{sizeMultiple}</button>
-        <button onClick={incH}>+{sizeMultiple}</button>
-        <span className={styles.buttonHeader}>Pixel scale</span>
-        <button onClick={setScale(0.5)}>⇩</button>
-        <button onClick={setScale(2)}>⇧</button>
+        <span className={styles.buttonGroup}>
+          <span className={styles.buttonHeader}>Move</span>
+          <button onClick={shiftL}>⇦</button>
+          <button onClick={shiftD}>⇩</button>
+          <button onClick={shiftU}>⇧</button>
+          <button onClick={shiftR}>⇨</button>
+        </span>
+        <span className={styles.buttonGroup}>
+          <span className={styles.buttonHeader}>Size</span>
+          <span>
+            {width}x{height}
+          </span>
+        </span>
+        <span className={styles.buttonGroup}>
+          <span className={styles.buttonHeader}>Width</span>
+          <button onClick={decW}>-{sizeMultiple}</button>
+          <button onClick={incW}>+{sizeMultiple}</button>
+        </span>
+        <span className={styles.buttonGroup}>
+          <span className={styles.buttonHeader}>Height</span>
+          <button onClick={decH}>-{sizeMultiple}</button>
+          <button onClick={incH}>+{sizeMultiple}</button>
+        </span>
+        <span className={styles.buttonGroup}>
+          <span className={styles.buttonHeader}>Pixel scale</span>
+          <button onClick={setScale(0.5)}>⇩</button>
+          <button onClick={setScale(2)}>⇧</button>
+        </span>
       </div>
       <style>{`.${styles.table} { --cell-size: ${30 * scale}px; }`}</style>
       <table className={styles.table}>

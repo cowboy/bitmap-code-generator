@@ -11,6 +11,7 @@
 
 .cell {
   width: var(--cell-size);
+  min-width: var(--cell-size);
   background: #222;
   border: 1px solid #000;
   border-radius: calc(var(--cell-size) / 3);
@@ -20,15 +21,17 @@
   background: #f00;
 }
 
-.buttons {
-  margin: 0.5em 0.5em 0.5em 0;
+.buttonGroup {
+  display: inline-block;
+  margin-right: 1em;
 }
 
-.buttons > * {
-  margin-right: 0.5em;
+.buttonGroup:last-child,
+.buttonGroup > *:last-child {
+  margin-right: 0;
 }
 
 .buttonHeader {
-  margin-left: 0.75em;
   font-weight: 700;
+  margin-right: 0.5em;
 }

@@ -32,17 +32,12 @@ h3 {
   font-size: 1.2em;
 }
 
-label {
-  display: block;
-  margin-bottom: 0.5em;
-}
-
 textarea {
   width: 100%;
   height: 150px;
 }
 
 button {
-  margin-right: 0.5em;
+  margin: 0 0.5em 0.5em 0;
 }
 

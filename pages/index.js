@@ -34,11 +34,6 @@ export default function Home() {
         <meta name="description" content="Bitmap ⇔ Code Generator" />
       </Head>
       <h1>Bitmap ⇔ Code Generator</h1>
-      <p>
-        Suitable for use with{' '}
-        <a href="https://github.com/GyverLibs/GyverMAX7219">GyverMAX7219</a> and
-        possibly other code that renders 8x8 bitmaps
-      </p>
       <label>
         <h3>Name</h3>
         <input
@@ -73,6 +68,7 @@ export default function Home() {
         <textarea
           value={state.code}
           onChange={handleEventChange('code')}
+          onBlur={handleEventChange('formatCode')}
           className="code"
         />
       </label>
@@ -80,7 +76,7 @@ export default function Home() {
       {/* <h3>State</h3>
       <pre>{JSON.stringify(state, null, 2)}</pre> */}
       <p>
-        Made by <a href="https://github.com/cowboy">cowboy</a> for{' '}
+        Made by <a href="https://github.com/cowboy">"Cowboy" Ben Alman</a> for{' '}
         <a href="https://www.theentirerobot.com/">The Entire Robot</a>. Source
         code on{' '}
         <a href="https://github.com/cowboy/bitmap-code-generator">GitHub</a>,
