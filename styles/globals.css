@@ -1,14 +1,19 @@
+:root {
+  --button-color: #fff;
+  --button-hover-color: rgb(25, 105, 209);
+}
+
 html,
 body {
   padding: 0;
   margin: 0;
+  background: #eee;
 }
 
 html,
 body,
 button {
-  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
-    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  font-family: 'Helvetica Neue', 'Arial Nova', Helvetica, Arial, sans-serif;
 }
 
 .code {
@@ -21,6 +26,22 @@ button {
 
 body {
   padding: 1em;
+}
+
+a {
+  display: inline-block;
+  position: relative;
+  left: 0;
+  padding: 2px 4px;
+  margin: -2px -4px;
+  transition: all 0.2s;
+  color: var(--button-hover-color);
+  border-radius: 3px;
+}
+
+a:hover {
+  color: #fff;
+  background-color: var(--button-hover-color);
 }
 
 h1 {
@@ -38,6 +59,18 @@ textarea {
 }
 
 button {
+  transition: all 0.1s;
   margin: 0 0.5em 0.5em 0;
+  border: 1px solid #777;
+  border-radius: 3px;
+  background: var(--button-color);
+  padding: 2px 6px;
+  line-height: 1.4em;
+  min-width: 2em;
+}
+
+button:hover {
+  color: #fff;
+  background: var(--button-hover-color);
 }
 

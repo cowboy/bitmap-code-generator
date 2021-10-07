@@ -51,9 +51,13 @@ export const Presets = ({ onClick }) => {
           {Object.keys(presetStore())
             .sort()
             .map((name) => (
-              <button key={name} onClick={clickHandler(getPreset, name)}>
+              <button
+                key={name}
+                className={styles.deletePresetButton}
+                onClick={clickHandler(getPreset, name)}
+              >
                 {name}
-                <span className={styles.deletePreset}>⮿</span>
+                <span className={styles.deletePreset}>❌</span>
               </button>
             ))}
         </>
