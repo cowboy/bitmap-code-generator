@@ -6,6 +6,7 @@ import {
   arrayToBitmap,
   getCode,
   getDimensions,
+  validateName,
   validateFormat,
   validateScale,
   printBitmap,
@@ -49,7 +50,7 @@ const actionHandlers = {
     return transform(getCode)({ ...state, code })
   },
   name(state, name) {
-    return transform(getCode)({ ...state, name })
+    return transform(validateName, getCode)({ ...state, name })
   },
   format(state, format) {
     return transform(validateFormat, getCode)({ ...state, format })

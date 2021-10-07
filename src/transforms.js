@@ -114,6 +114,11 @@ export const getDimensions = ({ bitmap, array }) => {
   return { width, height }
 }
 
+export const validateName = ({ name }) => {
+  name = name.replace(/\W/g, '_')
+  return { name }
+}
+
 const defaultFormat = 'C++ (GyverMAX7219)'
 export const validateFormat = ({
   format = transformStore('format') || defaultFormat,
