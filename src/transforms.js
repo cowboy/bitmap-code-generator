@@ -4,8 +4,8 @@ import { formatters } from './formatters'
 const transformStore = store.namespace('transform')
 
 export const transform =
-  (state) =>
   (...transformations) =>
+  (state) =>
     transformations.reduce(
       (acc, transformation) => ({
         ...acc,

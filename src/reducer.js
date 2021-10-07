@@ -13,54 +13,54 @@ import {
 
 const defaultPreset = 'robot'
 
-export const initialState = transform({
-  name: defaultPreset,
-  array: getDefaultPreset(defaultPreset),
-})(
+export const initialState = transform(
   validateFormat,
   validateScale,
   arrayToBitmap,
   getDimensions,
   getCode,
   printBitmap
-)
+)({
+  name: defaultPreset,
+  array: getDefaultPreset(defaultPreset),
+})
 
 const actionHandlers = {
   scale(state, scale) {
-    return transform({ ...state, scale })(validateScale)
+    return transform(validateScale)({ ...state, scale })
   },
   bitmap(state, bitmap) {
-    return transform({ ...state, bitmap })(
+    return transform(
       bitmapToArray,
       getDimensions,
       getCode,
       printBitmap
-    )
+    )({ ...state, bitmap })
   },
   code(state, code) {
-    return transform({ ...state, code })(
+    return transform(
       codeToArray,
       arrayToBitmap,
       getDimensions,
       printBitmap
-    )
+    )({ ...state, code })
   },
   formatCode(state, code) {
-    return transform({ ...state, code })(getCode)
+    return transform(getCode)({ ...state, code })
   },
   name(state, name) {
-    return transform({ ...state, name })(getCode)
+    return transform(getCode)({ ...state, name })
   },
   format(state, format) {
-    return transform({ ...state, format })(validateFormat, getCode)
+    return transform(validateFormat, getCode)({ ...state, format })
   },
   preset(state, { name, array }) {
-    return transform({ ...state, name, array })(
+    return transform(
       arrayToBitmap,
       getDimensions,
       getCode,
       printBitmap
-    )
+    )({ ...state, name, array })
   },
 }
 
