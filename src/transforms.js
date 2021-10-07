@@ -14,30 +14,30 @@ export const transform =
       state
     )
 
-const sizeMultiple = 8
-export const roundSizeUpToMultiple = (arg) => {
+export const blockSize = 8
+export const roundUpToBlockSize = (arg) => {
   const maxSize = Array.isArray(arg) ? Math.max(...arg) : arg
-  return Math.ceil(maxSize / sizeMultiple) * sizeMultiple
+  return Math.ceil(maxSize / blockSize) * blockSize
 }
-export const roundSizeDownToMultiple = (arg) => {
+export const roundDownToBlockSize = (arg) => {
   const maxSize = Array.isArray(arg) ? Math.max(...arg) : arg
-  return Math.max(1, Math.floor(maxSize / sizeMultiple)) * sizeMultiple
+  return Math.max(1, Math.floor(maxSize / blockSize)) * blockSize
 }
 
 export const getWidthFromBitmap = (bitmap) => {
-  return roundSizeUpToMultiple(bitmap.split('\n').map((s) => s.length))
+  return roundUpToBlockSize(bitmap.split('\n').map((s) => s.length))
 }
 
 export const getHeightFromBitmap = (bitmap) => {
-  return roundSizeUpToMultiple(bitmap.split('\n').length)
+  return roundUpToBlockSize(bitmap.split('\n').length)
 }
 
 export const getWidthFromArray = (array) => {
-  return roundSizeUpToMultiple(array.map((n) => n.toString(2).length))
+  return roundUpToBlockSize(array.map((n) => n.toString(2).length))
 }
 
 export const getHeightFromArray = (array) => {
-  return roundSizeUpToMultiple(array.length)
+  return roundUpToBlockSize(array.length)
 }
 
 export const printBitmap = ({ bitmap }) => {
@@ -91,7 +91,7 @@ export const bitmapToArray = ({ bitmap }) => {
 }
 
 export const getCode = ({ array, name, format }) => {
-  const width = roundSizeUpToMultiple(array.map((n) => n.toString(2).length))
+  const width = roundUpToBlockSize(array.map((n) => n.toString(2).length))
   const hexDigits = (Math.pow(2, width) - 1).toString(16).length
   const hexValue = (n) => {
     const hexStr = `${'0'.repeat(hexDigits)}${n.toString(16)}`.slice(-hexDigits)
@@ -105,11 +105,11 @@ export const getCode = ({ array, name, format }) => {
 export const getDimensions = ({ bitmap, array }) => {
   if (bitmap) {
     const lines = bitmap.split('\n')
-    const width = roundSizeUpToMultiple(lines.map((s) => s.length))
+    const width = roundUpToBlockSize(lines.map((s) => s.length))
     const height = lines.length
     return { width, height }
   }
-  const width = roundSizeUpToMultiple(array.map((n) => n.toString(2).length))
+  const width = roundUpToBlockSize(array.map((n) => n.toString(2).length))
   const height = array.length
   return { width, height }
 }

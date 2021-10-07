@@ -3,8 +3,8 @@ import Favicon from 'react-favicon'
 import cx from 'classnames'
 import {
   arrayToBitmap,
-  roundSizeDownToMultiple,
-  roundSizeUpToMultiple,
+  blockSize,
+  roundDownToBlockSize,
 } from '../src/transforms'
 
 import styles from './Bitmap.module.css'
@@ -25,6 +25,13 @@ const bgMask = [
   0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0x7ffe,
 ]
 
+const ButtonGroup = ({ name, children }) => (
+  <span className={styles.buttonGroup}>
+    {name && <span className={styles.buttonHeader}>{name}</span>}
+    {children}
+  </span>
+)
+
 export const Bitmap = ({
   bitmap,
   width,
@@ -33,9 +40,6 @@ export const Bitmap = ({
   onChangeBitmap,
   onChangeScale,
 }) => {
-  const widthMin = width === 8
-  const heightMin = height === 8
-
   const [dragState, setDragState] = React.useState(null)
 
   const setScale = (multiplier) => () => {
@@ -56,6 +60,13 @@ export const Bitmap = ({
       arr[i + 3] = alpha ? 255 : 0
     }
 
+    const forEachPixel = (bitmap, fn) =>
+      bitmap2arr(bitmap).forEach((row, y) =>
+        row.forEach((pixel, x) => fn(x, y, pixel))
+      )
+
+    const widthMin = width === 8
+    const heightMin = height === 8
     const bg = widthMin && heightMin ? bgBorder : bgBlank
     forEachPixel(arrayToBitmap({ array: bg }).bitmap, setPixel)
     forEachPixel(arrayToBitmap({ array: bgMask }).bitmap, setAlpha)
@@ -80,11 +91,6 @@ export const Bitmap = ({
     arr
       .map((row) => row.map((pixel) => (pixel ? 'x' : ' ')).join(''))
       .join('\n')
-
-  const forEachPixel = (bitmap, fn) =>
-    bitmap2arr(bitmap).forEach((row, y) =>
-      row.forEach((pixel, x) => fn(x, y, pixel))
-    )
 
   const update = (fn) => updater(fn)()
   const updater = (fn) => () => {
@@ -119,66 +125,62 @@ export const Bitmap = ({
     }
   })
 
-  const sizeMultiple = roundSizeUpToMultiple(1)
+  const clearPixel = () => false
+  const invertPixel = (pixel) => !pixel
+
   const map = (fn) => (arr) => arr.map(fn)
-  const rotate = (i) => (arr) => [...arr.slice(i), ...arr.slice(0, i)]
-  const add = (fn) => (row) => [...row, ...fn()]
-  const remove = (size) => (arr) =>
-    arr.slice(0, roundSizeDownToMultiple(size - 1))
-  const cells =
-    (length, fn = () => false) =>
+  const shift = (i) => (arr) => [...arr.slice(i), ...arr.slice(0, i)]
+  const add = (fn) => (arr) => [...arr, ...fn()]
+  const trim = (i) => (arr) => arr.slice(0, i)
+  const array =
+    (length, fn = clearPixel) =>
     () =>
       Array.from({ length }, fn)
 
-  const clear = updater(map(map(() => false)))
-  const invert = updater(map(map((pixel) => !pixel)))
+  const clear = updater(map(map(clearPixel)))
+  const invert = updater(map(map(invertPixel)))
 
-  const shiftL = updater(map(rotate(1)))
-  const shiftR = updater(map(rotate(-1)))
-  const shiftU = updater(rotate(1))
-  const shiftD = updater(rotate(-1))
+  const shiftL = updater(map(shift(1)))
+  const shiftR = updater(map(shift(-1)))
+  const shiftU = updater(shift(1))
+  const shiftD = updater(shift(-1))
 
-  const decW = updater(map(remove(width)))
-  const incW = updater(map(add(cells(sizeMultiple))))
-  const decH = updater(remove(height))
-  const incH = updater(add(cells(sizeMultiple, cells(width))))
+  const decW = updater(map(trim(roundDownToBlockSize(width - 1))))
+  const incW = updater(map(add(array(blockSize))))
+  const decH = updater(trim(roundDownToBlockSize(height - 1)))
+  const incH = updater(add(array(blockSize, array(width))))
 
   return (
     <>
       <Favicon url={blackFavicon} renderOverlay={favicon} />
       <div className={styles.buttons}>
-        <span className={styles.buttonGroup}>
+        <ButtonGroup>
           <button onClick={clear}>clear</button>
           <button onClick={invert}>invert</button>
-        </span>
-        <span className={styles.buttonGroup}>
-          <span className={styles.buttonHeader}>Move</span>
+        </ButtonGroup>
+        <ButtonGroup name="Move">
           <button onClick={shiftL}>⇦</button>
           <button onClick={shiftD}>⇩</button>
           <button onClick={shiftU}>⇧</button>
           <button onClick={shiftR}>⇨</button>
-        </span>
-        <span className={styles.buttonGroup}>
-          <span className={styles.buttonHeader}>Size</span>
+        </ButtonGroup>
+        <ButtonGroup name="Size">
           <span>
             {width}x{height}
           </span>
-        </span>
-        <span className={styles.buttonGroup}>
-          <span className={styles.buttonHeader}>Width</span>
-          <button onClick={decW}>-{sizeMultiple}</button>
-          <button onClick={incW}>+{sizeMultiple}</button>
-        </span>
-        <span className={styles.buttonGroup}>
-          <span className={styles.buttonHeader}>Height</span>
-          <button onClick={decH}>-{sizeMultiple}</button>
-          <button onClick={incH}>+{sizeMultiple}</button>
-        </span>
-        <span className={styles.buttonGroup}>
-          <span className={styles.buttonHeader}>Pixel scale</span>
+        </ButtonGroup>
+        <ButtonGroup name="Width">
+          <button onClick={decW}>-{blockSize}</button>
+          <button onClick={incW}>+{blockSize}</button>
+        </ButtonGroup>
+        <ButtonGroup name="Height">
+          <button onClick={decH}>-{blockSize}</button>
+          <button onClick={incH}>+{blockSize}</button>
+        </ButtonGroup>
+        <ButtonGroup name="Pixel">
           <button onClick={setScale(0.5)}>⇩</button>
           <button onClick={setScale(2)}>⇧</button>
-        </span>
+        </ButtonGroup>
       </div>
       <style>{`.${styles.table} { --cell-size: ${30 * scale}px; }`}</style>
       <table className={styles.table}>
