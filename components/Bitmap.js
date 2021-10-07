@@ -177,7 +177,7 @@ export const Bitmap = ({
           <button onClick={decH}>-{blockSize}</button>
           <button onClick={incH}>+{blockSize}</button>
         </ButtonGroup>
-        <ButtonGroup name="Pixel">
+        <ButtonGroup name="Pixel Scale">
           <button onClick={setScale(0.5)}>⇩</button>
           <button onClick={setScale(2)}>⇧</button>
         </ButtonGroup>
