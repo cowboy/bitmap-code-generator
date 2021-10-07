@@ -9,7 +9,17 @@ import { Bitmap } from 'components/Bitmap'
 
 import styles from '../styles/Home.module.css'
 
-export default function Home() {
+const GITHUB_URL = 'https://github.com/cowboy/bitmap-code-generator'
+
+export async function getStaticProps() {
+  return {
+    props: {
+      commitSha: process.env.GITHUB_SHA || false,
+    },
+  }
+}
+
+export default function Home({ commitSha }) {
   const [state, dispatch] = React.useReducer(reducer, initialState)
   const update = useForceUpdate()
 
@@ -79,9 +89,17 @@ export default function Home() {
         Made by{' '}
         <a href="http://benalman.com/">&ldquo;Cowboy&rdquo; Ben Alman</a> for{' '}
         <a href="https://www.theentirerobot.com/">The Entire Robot</a>. Source
-        code on{' '}
-        <a href="https://github.com/cowboy/bitmap-code-generator">GitHub</a>,
-        patches welcome!
+        code on <a href={GITHUB_URL}>GitHub</a>, patches welcome!
+        {commitSha && (
+          <>
+            {' '}
+            Built from commit{' '}
+            <a href={`${GITHUB_URL}/commit/${commitSha}`}>
+              {commitSha.slice(0, 7)}
+            </a>
+            .
+          </>
+        )}
       </p>
     </NoSSR>
   )
