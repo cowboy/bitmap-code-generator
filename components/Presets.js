@@ -49,6 +49,10 @@ export const Presets = ({ onClick }) => {
       {presetStore.size() > 0 && (
         <>
           <h3>Your saved bitmaps</h3>
+          <p>
+            Click any of these buttons to load that bitmap in the new site. Once
+            a bitmap is loaded there, you can re-save it.
+          </p>
           {Object.keys(presetStore())
             .sort()
             .map((name) => (
@@ -58,17 +62,10 @@ export const Presets = ({ onClick }) => {
                 onClick={clickHandler(getPreset, name)}
               >
                 {name}
-                <span className={styles.deletePreset}>❌</span>
               </button>
             ))}
         </>
       )}
-      <h3>Example bitmaps</h3>
-      {Object.keys(defaultPresets).map((name) => (
-        <button key={name} onClick={clickHandler(getDefaultPreset, name)}>
-          {name}
-        </button>
-      ))}
     </div>
   )
 }
