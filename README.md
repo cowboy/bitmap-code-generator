@@ -8,7 +8,7 @@ Suitable for use with [GyverMAX7219](https://github.com/GyverLibs/GyverMAX7219) 
 
 ## Online Editor
 
-https://cowboy.github.io/bitmap-code-generator/
+https://bitmap-code-generator.benalman.com/
 
 ## Example
 
