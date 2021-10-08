@@ -119,8 +119,8 @@ export const getDimensions = ({ bitmap, array }) => {
 export const getShareUrl = ({ name, array }) => {
   const json = JSON.stringify({ name, array })
   const bitmapdata = encode(json)
-  const href = location.href.replace(/\/share\/.*/, '/')
-  const url = `${href}share/${bitmapdata}`
+  const href = location.href.replace(/\/share\/.*/, '').replace(/\/$/, '')
+  const url = `${href}/share/${bitmapdata}`
   return { url }
 }
 
