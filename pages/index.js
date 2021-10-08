@@ -1,10 +1,9 @@
 import * as React from 'react'
-import Head from 'next/head'
-import NoSSR from 'react-no-ssr'
-import { initialState, reducer } from 'src/reducer'
+import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { useForceUpdate } from 'src/useForceUpdate'
 import { formatters } from 'src/formatters'
 import { Presets, savePreset } from 'components/Presets'
+import { Loading } from 'components/Loading'
 import { Bitmap } from 'components/Bitmap'
 
 import styles from '../styles/Home.module.css'
@@ -19,9 +18,18 @@ export async function getStaticProps() {
   }
 }
 
-export default function Home({ commitSha }) {
-  const [state, dispatch] = React.useReducer(reducer, initialState)
+export default function Home({ state, dispatch, commitSha }) {
   const update = useForceUpdate()
+
+  React.useEffect(() => {
+    if (!state.loaded) {
+      dispatch({ type: 'initialLoad' })
+    }
+  }, [dispatch, state.loaded])
+
+  if (!state.loaded) {
+    return <Loading />
+  }
 
   const handleEventChange = (type) => (event) => {
     const payload = event.target.value
@@ -33,25 +41,28 @@ export default function Home({ commitSha }) {
   }
 
   const save = () => {
-    savePreset(state.name, state.array)
-    update()
+    if (savePreset(state.name, state.array)) {
+      update()
+    }
+  }
+
+  const notifyClipboard = () => {
+    dispatch({
+      type: 'notify',
+      payload: { message: 'URL copied to clipboard' },
+    })
   }
 
   return (
-    <NoSSR>
-      <Head>
-        <title>Bitmap ⇔ Code Generator</title>
-        <meta name="description" content="Bitmap ⇔ Code Generator" />
-      </Head>
-      <h1>Bitmap ⇔ Code Generator</h1>
+    <>
       <label>
         <h3>Name</h3>
         <input
           value={state.name}
           onChange={handleEventChange('name')}
-          className="code"
-        />{' '}
-        <button onClick={save}>Save</button>
+          className={styles.code}
+        />
+        <button onClick={save}>Save local bitmap</button>
       </label>
       {/* <label>
         <div>Bitmap</div>
@@ -63,6 +74,15 @@ export default function Home({ commitSha }) {
         onChangeBitmap={handleChange('bitmap')}
         onChangeScale={handleChange('scale')}
       />
+      <label>
+        <h3>Shareable URL</h3>
+        <div className={styles.horizontalRow}>
+          <input value={state.url} className={styles.url} readOnly />
+          <CopyToClipboard text={state.url} onCopy={notifyClipboard}>
+            <button>Copy to clipboard</button>
+          </CopyToClipboard>
+        </div>
+      </label>
       <label>
         <h3>Code format</h3>
         <select value={state.format} onChange={handleEventChange('format')}>
@@ -79,7 +99,7 @@ export default function Home({ commitSha }) {
           value={state.code}
           onChange={handleEventChange('code')}
           onBlur={handleEventChange('formatCode')}
-          className="code"
+          className={styles.code}
         />
       </label>
       <Presets onClick={handleChange('preset')} />
@@ -101,6 +121,6 @@ export default function Home({ commitSha }) {
           </>
         )}
       </p>
-    </NoSSR>
+    </>
   )
 }

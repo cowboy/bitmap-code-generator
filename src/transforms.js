@@ -1,5 +1,7 @@
 import store from 'store2'
+import { encode, decode } from 'js-base64'
 import { formatters } from './formatters'
+import { getDefaultPreset } from 'components/Presets'
 
 const transformStore = store.namespace('transform')
 
@@ -114,9 +116,37 @@ export const getDimensions = ({ bitmap, array }) => {
   return { width, height }
 }
 
+export const getShareUrl = ({ name, array }) => {
+  const json = JSON.stringify({ name, array })
+  const bitmapdata = encode(json)
+  const href = location.href.replace(/\/share\/.*/, '/')
+  const url = `${href}share/${bitmapdata}`
+  return { url }
+}
+
 export const validateName = ({ name }) => {
   name = name.replace(/\W/g, '_')
   return { name }
+}
+
+const defaultPreset = 'robot'
+export const loadInitialData = (bitmapdata) => () => {
+  let notification
+  if (bitmapdata !== undefined) {
+    try {
+      const json = decode(bitmapdata)
+      const { name, array } = JSON.parse(json)
+      return { name, array, loaded: true }
+    } catch (err) {
+      notification = {
+        type: 'error',
+        message: 'There was an error loading the shared image',
+      }
+    }
+  }
+  const name = defaultPreset
+  const array = getDefaultPreset(name)
+  return { name, array, notification, loaded: true }
 }
 
 const defaultFormat = 'C++ (GyverMAX7219)'

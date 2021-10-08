@@ -1,4 +1,3 @@
-import { getDefaultPreset } from 'components/Presets'
 import {
   transform,
   bitmapToArray,
@@ -6,27 +5,21 @@ import {
   arrayToBitmap,
   getCode,
   getDimensions,
+  getShareUrl,
   validateName,
   validateFormat,
   validateScale,
   printBitmap,
+  loadInitialData,
 } from 'src/transforms'
 
-const defaultPreset = 'robot'
-
-export const initialState = transform(
-  validateFormat,
-  validateScale,
-  arrayToBitmap,
-  getDimensions,
-  getCode,
-  printBitmap
-)({
-  name: defaultPreset,
-  array: getDefaultPreset(defaultPreset),
-})
-
 const actionHandlers = {
+  notify(state, notification) {
+    return { ...state, notification }
+  },
+  clearNotification({ notification, ...state }) {
+    return state
+  },
   scale(state, scale) {
     return transform(validateScale)({ ...state, scale })
   },
@@ -35,12 +28,14 @@ const actionHandlers = {
       bitmapToArray,
       getDimensions,
       getCode,
+      getShareUrl,
       printBitmap
     )({ ...state, bitmap })
   },
   code(state, code) {
     return transform(
       codeToArray,
+      getShareUrl,
       arrayToBitmap,
       getDimensions,
       printBitmap
@@ -50,7 +45,7 @@ const actionHandlers = {
     return transform(getCode)({ ...state, code })
   },
   name(state, name) {
-    return transform(validateName, getCode)({ ...state, name })
+    return transform(validateName, getCode, getShareUrl)({ ...state, name })
   },
   format(state, format) {
     return transform(validateFormat, getCode)({ ...state, format })
@@ -60,14 +55,30 @@ const actionHandlers = {
       arrayToBitmap,
       getDimensions,
       getCode,
+      codeToArray,
+      getShareUrl,
       printBitmap
     )({ ...state, name, array })
+  },
+  initialLoad(state, bitmapdata) {
+    return transform(
+      loadInitialData(bitmapdata),
+      validateFormat,
+      validateScale,
+      arrayToBitmap,
+      getDimensions,
+      getCode,
+      getShareUrl,
+      printBitmap
+    )({})
   },
 }
 
 export const reducer = (state, { type, payload }) => {
   if (actionHandlers[type]) {
     return actionHandlers[type](state, payload)
+  } else {
+    console.error(`Unknown action type "${type}" with payload:`, payload)
   }
   return state
 }

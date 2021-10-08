@@ -11,8 +11,11 @@
     "prepare": "husky install"
   },
   "dependencies": {
+    "classnames": "^2.3.1",
+    "js-base64": "^3.7.2",
     "next": "11.1.2",
     "react": "17.0.2",
+    "react-copy-to-clipboard": "^5.0.4",
     "react-dom": "17.0.2",
     "react-favicon": "^0.0.23",
     "react-no-ssr": "^1.1.0",

@@ -21,11 +21,12 @@ export const getDefaultPreset = (name) => defaultPresets[name]
 export const getPreset = (name) => presetStore(name)
 export const savePreset = (name, arr) => {
   if (presetStore.has(name)) {
-    if (!confirm(`Replace preset "${name}"?`)) {
-      return
+    if (!confirm(`Replace local bitmap "${name}"?`)) {
+      return false
     }
   }
   presetStore(name, arr)
+  return true
 }
 export const deletePreset = (name) => presetStore.remove(name)
 
@@ -34,7 +35,7 @@ export const Presets = ({ onClick }) => {
 
   const clickHandler = (getter, name) => (event) => {
     if (event.target.nodeName === 'SPAN') {
-      if (confirm(`Delete preset "${name}"?`)) {
+      if (confirm(`Delete local bitmap "${name}"?`)) {
         deletePreset(name)
         update()
       }

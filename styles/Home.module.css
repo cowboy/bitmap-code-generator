@@ -1,0 +1,16 @@
+.code {
+  font-family: Consolas, monaco, monospace;
+}
+
+.url {
+  width: 100%;
+}
+
+.horizontalRow {
+  display: flex;
+  align-items: center;
+}
+
+.horizontalRow > * {
+  margin-bottom: 0.5em;
+}
