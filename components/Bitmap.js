@@ -1,11 +1,8 @@
 import * as React from 'react'
 import Favicon from 'react-favicon'
 import cx from 'classnames'
-import {
-  arrayToBitmap,
-  blockSize,
-  roundDownToBlockSize,
-} from '../src/transforms'
+import { blockSize, roundDownToBlockSize } from 'src/transforms'
+import { numberArrayToBitmapArray } from 'components/Presets'
 
 import styles from './Bitmap.module.css'
 
@@ -33,7 +30,7 @@ const ButtonGroup = ({ name, children }) => (
 )
 
 export const Bitmap = ({
-  bitmap,
+  bitmapArray,
   width,
   height,
   scale,
@@ -60,18 +57,18 @@ export const Bitmap = ({
       arr[i + 3] = alpha ? 255 : 0
     }
 
-    const forEachPixel = (bitmap, fn) =>
-      bitmap2arr(bitmap).forEach((row, y) =>
+    const forEachPixel = (bitmapArray, fn) =>
+      bitmapArray.forEach((row, y) =>
         row.forEach((pixel, x) => fn(x, y, pixel))
       )
 
     const widthMin = width === 8
     const heightMin = height === 8
     const bg = widthMin && heightMin ? bgBorder : bgBlank
-    forEachPixel(arrayToBitmap({ array: bg }).bitmap, setPixel)
-    forEachPixel(arrayToBitmap({ array: bgMask }).bitmap, setAlpha)
+    forEachPixel(numberArrayToBitmapArray(bg), setPixel)
+    forEachPixel(numberArrayToBitmapArray(bgMask), setAlpha)
 
-    forEachPixel(bitmap, (x, y, pixel) => {
+    forEachPixel(bitmapArray, (x, y, pixel) => {
       setPixel(x + (widthMin ? 4 : 0), y + (heightMin ? 4 : 0), pixel)
     })
 
@@ -79,23 +76,9 @@ export const Bitmap = ({
     ctx.putImageData(imageData, 0, 0)
   }
 
-  const bitmap2arr = (bitmap) =>
-    bitmap.split('\n').map((line) => {
-      if (line.length < width) {
-        line += ' '.repeat(width - line.length)
-      }
-      return line.split('').map((s) => (s === ' ' ? false : true))
-    })
-
-  const arr2bitmap = (arr) =>
-    arr
-      .map((row) => row.map((pixel) => (pixel ? 'x' : ' ')).join(''))
-      .join('\n')
-
   const update = (fn) => updater(fn)()
   const updater = (fn) => () => {
-    const arr = bitmap2arr(bitmap)
-    onChangeBitmap(arr2bitmap(fn(arr) || arr))
+    onChangeBitmap(fn(bitmapArray))
   }
 
   const mouseDown = (x, y) => (event) => {
@@ -185,7 +168,7 @@ export const Bitmap = ({
       <style>{`.${styles.table} { --cell-size: ${30 * scale}px; }`}</style>
       <table className={styles.table}>
         <tbody>
-          {bitmap2arr(bitmap).map((arr, y) => (
+          {bitmapArray.map((arr, y) => (
             <tr key={y} className={styles.row}>
               {arr.map((pixel, x) => (
                 <td

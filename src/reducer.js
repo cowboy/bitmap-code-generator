@@ -1,17 +1,36 @@
+import { getDefaultPreset } from 'components/Presets'
+import { getStateFromBitmapData } from 'src/share-url-encoder'
 import {
   transform,
-  bitmapToArray,
-  codeToArray,
-  arrayToBitmap,
+  codeToBitmapArray,
   getCode,
   getDimensions,
   getShareUrl,
   validateName,
   validateFormat,
   validateScale,
-  printBitmap,
-  loadInitialData,
+  printBitmapArray,
+  printState,
 } from 'src/transforms'
+
+const getInitialData = (bitmapData) => {
+  let notification
+  if (bitmapData !== undefined) {
+    const { error, name, bitmapArray } = getStateFromBitmapData(bitmapData)
+    if (error) {
+      notification = { type: 'error', message: error }
+    } else {
+      return { name, bitmapArray, loaded: true }
+    }
+  }
+  return { ...getDefaultPreset(), notification, loaded: true }
+}
+
+const debugMode = 0
+const debugStateBitmap = debugMode
+  ? transform(printState, printBitmapArray)
+  : transform()
+const debugState = debugMode ? transform(printState) : transform()
 
 const actionHandlers = {
   notify(state, notification) {
@@ -21,56 +40,55 @@ const actionHandlers = {
     return state
   },
   scale(state, scale) {
-    return transform(validateScale)({ ...state, scale })
+    return transform(validateScale, debugState)({ ...state, scale })
   },
-  bitmap(state, bitmap) {
+  bitmapArray(state, bitmapArray) {
     return transform(
-      bitmapToArray,
       getDimensions,
       getCode,
       getShareUrl,
-      printBitmap
-    )({ ...state, bitmap })
+      debugStateBitmap
+    )({ ...state, bitmapArray })
   },
   code(state, code) {
     return transform(
-      codeToArray,
-      getShareUrl,
-      arrayToBitmap,
+      codeToBitmapArray,
       getDimensions,
-      printBitmap
+      getShareUrl,
+      debugStateBitmap
     )({ ...state, code })
   },
   formatCode(state, code) {
-    return transform(getCode)({ ...state, code })
+    return transform(getCode, debugState)({ ...state, code })
   },
   name(state, name) {
-    return transform(validateName, getCode, getShareUrl)({ ...state, name })
+    return transform(
+      validateName,
+      getCode,
+      getShareUrl,
+      debugState
+    )({ ...state, name })
   },
   format(state, format) {
-    return transform(validateFormat, getCode)({ ...state, format })
+    return transform(validateFormat, getCode, debugState)({ ...state, format })
   },
-  preset(state, { name, array }) {
+  preset(state, { name, bitmapArray }) {
     return transform(
-      arrayToBitmap,
       getDimensions,
       getCode,
-      codeToArray,
       getShareUrl,
-      printBitmap
-    )({ ...state, name, array })
+      debugStateBitmap
+    )({ ...state, name, bitmapArray })
   },
-  initialLoad(state, bitmapdata) {
+  initialLoad(state, bitmapData) {
     return transform(
-      loadInitialData(bitmapdata),
       validateFormat,
       validateScale,
-      arrayToBitmap,
       getDimensions,
       getCode,
       getShareUrl,
-      printBitmap
-    )({})
+      debugStateBitmap
+    )(getInitialData(bitmapData))
   },
 }
 

@@ -2,7 +2,7 @@ import * as React from 'react'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { useForceUpdate } from 'src/useForceUpdate'
 import { formatters } from 'src/formatters'
-import { Presets, savePreset } from 'components/Presets'
+import { Presets, saveBitmap } from 'components/Presets'
 import { Loading } from 'components/Loading'
 import { Bitmap } from 'components/Bitmap'
 
@@ -41,7 +41,7 @@ export default function Home({ state, dispatch, commitSha }) {
   }
 
   const save = () => {
-    if (savePreset(state.name, state.array)) {
+    if (saveBitmap(state)) {
       update()
     }
   }
@@ -64,21 +64,17 @@ export default function Home({ state, dispatch, commitSha }) {
         />
         <button onClick={save}>Save local bitmap</button>
       </label>
-      {/* <label>
-        <div>Bitmap</div>
-        <textarea value={state.bitmap} onChange={handleChange('bitmap')} />
-      </label> */}
       <h3>Bitmap</h3>
       <Bitmap
         {...state}
-        onChangeBitmap={handleChange('bitmap')}
+        onChangeBitmap={handleChange('bitmapArray')}
         onChangeScale={handleChange('scale')}
       />
       <label>
         <h3>Shareable URL</h3>
         <div className={styles.horizontalRow}>
-          <input value={state.url} className={styles.url} readOnly />
-          <CopyToClipboard text={state.url} onCopy={notifyClipboard}>
+          <input value={state.shareUrl} className={styles.url} readOnly />
+          <CopyToClipboard text={state.shareUrl} onCopy={notifyClipboard}>
             <button>Copy to clipboard</button>
           </CopyToClipboard>
         </div>
@@ -103,8 +99,6 @@ export default function Home({ state, dispatch, commitSha }) {
         />
       </label>
       <Presets onClick={handleChange('preset')} />
-      {/* <h3>State</h3>
-      <pre>{JSON.stringify(state, null, 2)}</pre> */}
       <p>
         Made by{' '}
         <a href="http://benalman.com/">&ldquo;Cowboy&rdquo; Ben Alman</a> for{' '}
