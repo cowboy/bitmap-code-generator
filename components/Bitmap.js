@@ -3,6 +3,7 @@ import Favicon from 'react-favicon'
 import cx from 'classnames'
 import { blockSize } from 'src/transforms'
 import { numberArrayToBitmapArray } from 'components/Presets'
+import { Icon } from 'components/Icon'
 
 import styles from './Bitmap.module.css'
 
@@ -47,8 +48,9 @@ export const Bitmap = ({
   onChangeScale,
 }) => {
   const [dragState, setDragState] = React.useState(null)
-  const imageDataUrl = React.useMemo(() =>
-    getImageDataUrl(faviconSize, faviconSize)
+  const imageDataUrl = React.useMemo(
+    () => getImageDataUrl(faviconSize, faviconSize),
+    []
   )
 
   const setScale = (multiplier) => () => {
@@ -158,14 +160,26 @@ export const Bitmap = ({
       <Favicon url={imageDataUrl} renderOverlay={favicon} />
       <div className={styles.buttons}>
         <ButtonGroup>
-          <button onClick={clear}>clear</button>
-          <button onClick={invert}>invert</button>
+          <button onClick={clear} title="Clear all pixels">
+            clear
+          </button>
+          <button onClick={invert} title="Invert all pixels">
+            invert
+          </button>
         </ButtonGroup>
-        <ButtonGroup name="Move">
-          <button onClick={shiftX(1)}>⇦</button>
-          <button onClick={shiftY(-1)}>⇩</button>
-          <button onClick={shiftY(1)}>⇧</button>
-          <button onClick={shiftX(-1)}>⇨</button>
+        <ButtonGroup name="Shift">
+          <button onClick={shiftX(1)} title="Shift pixels left">
+            <Icon icon="fas:arrow-left" />
+          </button>
+          <button onClick={shiftY(-1)} title="Shift pixels down">
+            <Icon icon="fas:arrow-down" />
+          </button>
+          <button onClick={shiftY(1)} title="Shift pixels up">
+            <Icon icon="fas:arrow-up" />
+          </button>
+          <button onClick={shiftX(-1)} title="Shift pixels right">
+            <Icon icon="fas:arrow-right" />
+          </button>
         </ButtonGroup>
         <ButtonGroup name="Size">
           <span>
@@ -173,20 +187,55 @@ export const Bitmap = ({
           </span>
         </ButtonGroup>
         <ButtonGroup name="Width">
-          <button onClick={decW(blockSize)}>-{blockSize}</button>
-          <button onClick={decW(1)}>-1</button>
-          <button onClick={incW(1)}>+1</button>
-          <button onClick={incW(blockSize)}>+{blockSize}</button>
+          <button
+            onClick={decW(blockSize)}
+            title={`Decrease width by ${blockSize} pixels`}
+          >
+            -{blockSize}
+          </button>
+          <button onClick={decW(1)} title="Decrease width by 1 pixel">
+            -1
+          </button>
+          <button onClick={incW(1)} title="Increase width by 1 pixel">
+            +1
+          </button>
+          <button
+            onClick={incW(blockSize)}
+            title={`Increase width by ${blockSize} pixels`}
+          >
+            +{blockSize}
+          </button>
         </ButtonGroup>
         <ButtonGroup name="Height">
-          <button onClick={decH(blockSize)}>-{blockSize}</button>
-          <button onClick={decH(1)}>-1</button>
-          <button onClick={incH(1)}>+1</button>
-          <button onClick={incH(blockSize)}>+{blockSize}</button>
+          <button
+            onClick={decH(blockSize)}
+            title={`Decrease height by ${blockSize} pixels`}
+          >
+            -{blockSize}
+          </button>
+          <button onClick={decH(1)} title="Decrease height by 1 pixel">
+            -1
+          </button>
+          <button onClick={incH(1)} title="Increase height by 1 pixel">
+            +1
+          </button>
+          <button
+            onClick={incH(blockSize)}
+            title={`Increase height by ${blockSize} pixels`}
+          >
+            +{blockSize}
+          </button>
         </ButtonGroup>
-        <ButtonGroup name="Pixel Scale">
-          <button onClick={setScale(0.5)}>⇩</button>
-          <button onClick={setScale(2)}>⇧</button>
+        <ButtonGroup name="Pixel Size">
+          <button
+            onClick={setScale(0.5)}
+            title="Make pixels smaller (view only)"
+          >
+            <Icon icon="fas:compress-arrows-alt" />
+          </button>
+          <button onClick={setScale(2)} title="Make pixels larger (view only)">
+            <Icon icon="fas:expand-arrows-alt" />
+          </button>
         </ButtonGroup>
       </div>
       <style>{`.${styles.table} { --cell-size: ${30 * scale}px; }`}</style>

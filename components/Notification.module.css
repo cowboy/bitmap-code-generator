@@ -19,6 +19,11 @@
   transition: all 0s;
 }
 
+.icon {
+  margin-left: -0.25em;
+  margin-right: 0.5em;
+}
+
 .info {
   background: rgb(194, 242, 255);
 }

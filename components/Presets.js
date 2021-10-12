@@ -4,6 +4,7 @@ import { getWidthFromArray } from 'src/transforms'
 import { useForceUpdate } from 'src/useForceUpdate'
 
 import styles from './Presets.module.css'
+import { Icon } from './Icon'
 
 const bitmapStore = store.namespace('preset')
 
@@ -52,35 +53,44 @@ export const getDefaultPreset = () => getPreset(defaultPreset)
 
 export const getSavedBitmap = (name) => {
   const data = bitmapStore(name)
-  const bitmapArray =
-    getStateFromBitmapData(data)?.bitmapArray || numberArrayToBitmapArray(data)
+  // v0
+  if (Array.isArray(data)) {
+    const bitmapArray = numberArrayToBitmapArray(data)
+    return { name, bitmapArray }
+  }
+  const { bitmapArray } = getStateFromBitmapData(data)
   return { name, bitmapArray }
 }
 
-export const saveBitmap = ({ name, bitmapArray }) => {
+export const saveBitmap = ({ name, width, height, bitmapArray }) => {
   if (bitmapStore.has(name)) {
     if (!confirm(`Replace local bitmap "${name}"?`)) {
       return false
     }
   }
-  bitmapStore(name, getShareUrlData({ bitmapArray }))
+  bitmapStore(name, getShareUrlData({ width, height, bitmapArray }))
   return true
 }
+
 export const deletePreset = (name) => bitmapStore.remove(name)
 
 export const Presets = ({ onClick }) => {
   const update = useForceUpdate()
 
-  const clickHandler = (getter, name) => (event) => {
-    if (event.target.nodeName === 'SPAN') {
-      if (confirm(`Delete local bitmap "${name}"?`)) {
-        deletePreset(name)
-        update()
-      }
-    } else {
-      onClick(getter(name))
+  const deleteBitmap = (name) => (event) => {
+    event.stopPropagation()
+    if (confirm(`Delete local bitmap "${name}"?`)) {
+      deletePreset(name)
+      update()
     }
   }
+  const loadBitmap = (name) => () => {
+    onClick(getSavedBitmap(name))
+  }
+  const loadPreset = (name) => () => {
+    onClick(getPreset(name))
+  }
+
   return (
     <div>
       {bitmapStore.size() > 0 && (
@@ -91,18 +101,23 @@ export const Presets = ({ onClick }) => {
             .map((name) => (
               <button
                 key={name}
-                className={styles.deletePresetButton}
-                onClick={clickHandler(getSavedBitmap, name)}
+                className={styles.bitmapButton}
+                onClick={loadBitmap(name)}
               >
-                {name}
-                <span className={styles.deletePreset}>❌</span>
+                <span className={styles.deleteText}>{name}</span>
+                <span
+                  className={styles.deleteIcon}
+                  onClick={deleteBitmap(name)}
+                >
+                  <Icon icon="far:trash-alt" />
+                </span>
               </button>
             ))}
         </>
       )}
       <h3>Example bitmaps</h3>
       {Object.keys(presets).map((name) => (
-        <button key={name} onClick={clickHandler(getPreset, name)}>
+        <button key={name} onClick={loadPreset(name)}>
           {name}
         </button>
       ))}

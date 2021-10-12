@@ -76,3 +76,7 @@ button:hover {
   background: var(--button-hover-color);
 }
 
+button svg {
+  position: relative;
+  top: 1px;
+}

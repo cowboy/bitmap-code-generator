@@ -64,9 +64,9 @@ export const getDimensions = ({ bitmapArray }) => {
   return { width, height }
 }
 
-export const getShareUrl = ({ name, bitmapArray }) => {
+export const getShareUrl = ({ name, width, height, bitmapArray }) => {
   const href = location.href.replace(/\/share\/.*/, '').replace(/\/$/, '')
-  const data = getShareUrlData({ name, bitmapArray })
+  const data = getShareUrlData({ name, width, height, bitmapArray })
   const shareUrl = `${href}/share/${data}`
   return { shareUrl }
 }
