@@ -6,15 +6,7 @@ import { Notification } from 'components/Notification'
 
 import '../styles/globals.css'
 
-export async function getStaticProps() {
-  return {
-    props: {
-      commitSha: process.env.VERCEL_GIT_COMMIT_SHA || false,
-    },
-  }
-}
-
-function MyApp({ Component, pageProps, commitSha }) {
+function MyApp({ Component, pageProps }) {
   const [state, dispatch] = React.useReducer(reducer, {})
   return (
     <NoSSR>
@@ -24,12 +16,7 @@ function MyApp({ Component, pageProps, commitSha }) {
       </Head>
       <h1>Bitmap ⇔ Code Generator</h1>
       <Notification state={state} dispatch={dispatch} />
-      <Component
-        {...pageProps}
-        state={state}
-        dispatch={dispatch}
-        commitSha={commitSha}
-      />
+      <Component {...pageProps} state={state} dispatch={dispatch} />
     </NoSSR>
   )
 }
