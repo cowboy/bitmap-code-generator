@@ -2,33 +2,33 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 // import { fab } from '@fortawesome/free-brands-svg-icons'
 import {
-  faInfoCircle,
-  faExclamationTriangle,
-  faArrowUp,
   faArrowDown,
   faArrowLeft,
   faArrowRight,
-  faExpandArrowsAlt,
+  faArrowUp,
   faCompressArrowsAlt,
+  faExclamationTriangle,
+  faExpandArrowsAlt,
+  faInfoCircle,
 } from '@fortawesome/free-solid-svg-icons'
 import {
   faClipboard,
-  faTrashAlt,
   faSave,
+  faTrashAlt,
 } from '@fortawesome/free-regular-svg-icons'
 
 library.add(
-  faClipboard,
-  faTrashAlt,
-  faSave,
-  faInfoCircle,
-  faExclamationTriangle,
-  faArrowUp,
   faArrowDown,
   faArrowLeft,
   faArrowRight,
+  faArrowUp,
+  faClipboard,
+  faCompressArrowsAlt,
+  faExclamationTriangle,
   faExpandArrowsAlt,
-  faCompressArrowsAlt
+  faInfoCircle,
+  faSave,
+  faTrashAlt
 )
 
 export const Icon = ({ icon, ...props }) => {

@@ -4,8 +4,7 @@
   background: #000;
 }
 
-.row
-.cell {
+.row .cell {
   height: var(--cell-size);
 }
 

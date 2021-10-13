@@ -3,21 +3,10 @@ import { numberArrayToBitmapArray } from 'components/Presets'
 
 const isDev = process.env.NODE_ENV === 'development'
 
+// I don't think this was ever released
 const v1 = (() => {
   const lengthMap =
     'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ23456789'
-
-  // const maxChars = lengthMap.length + 2
-  // const replaceRegex = new RegExp(`0{3,${maxChars}}|1{3,${maxChars}}`, 'g')
-
-  // const bitmapArrayToShareUrlString = (bitmapArray) =>
-  //   bitmapArray
-  //     .map((row) => row.map((pixel) => (pixel ? '1' : '0')).join(''))
-  //     .join(',')
-  //     .replace(
-  //       replaceRegex,
-  //       (orig) => `${lengthMap[orig.length - 3]}${orig[0]}`
-  //     )
 
   const shareUrlStringToBitmapArray = (shareUrlString) =>
     shareUrlString
@@ -28,7 +17,6 @@ const v1 = (() => {
       .map((rowStr) => rowStr.split('').map((char) => char === '1'))
 
   return {
-    // bitmapArrayToShareUrlString,
     shareUrlStringToBitmapArray,
   }
 })()
@@ -129,7 +117,7 @@ export const getStateFromBitmapData = (bitmapData) => {
     const { name, array } = JSON.parse(json)
     if (array) {
       log('getStateFromBitmapData v0')
-      const bitmapArray = numberArrayToBitmapArray(bitmapData)
+      const bitmapArray = numberArrayToBitmapArray(array)
       return { name, bitmapArray }
     }
   } catch (err) {

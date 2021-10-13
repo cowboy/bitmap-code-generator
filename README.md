@@ -4,7 +4,8 @@
 
 Convert between bitmaps and code, with a GUI bitmap editor
 
-Suitable for use with [GyverMAX7219](https://github.com/GyverLibs/GyverMAX7219) and possibly other code or hardware that uses 8x8 bitmaps or LED matrixes
+Suitable for use with [GyverMAX7219](https://github.com/GyverLibs/GyverMAX7219)
+and possibly other code or hardware that uses 8x8 bitmaps or LED matrixes
 
 ## Online Editor
 
