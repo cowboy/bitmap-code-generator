@@ -6,12 +6,20 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "test": "yarn lint",
+    "lint": "next lint && prettier --check .",
+    "test": "yarn lint && yarn test:unit",
+    "test:unit": "jest",
+    "test:watch": "jest --watchAll",
     "prepare": "husky install"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^1.2.36",
+    "@fortawesome/free-brands-svg-icons": "^5.15.4",
+    "@fortawesome/free-regular-svg-icons": "^5.15.4",
+    "@fortawesome/free-solid-svg-icons": "^5.15.4",
+    "@fortawesome/react-fontawesome": "^0.1.15",
     "classnames": "^2.3.1",
+    "common-tags": "^1.8.0",
     "js-base64": "^3.7.2",
     "next": "11.1.2",
     "react": "17.0.2",
@@ -22,9 +30,29 @@
     "store2": "^2.12.0"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^5.14.1",
+    "@testing-library/react": "^12.1.2",
+    "@testing-library/user-event": "^13.4.1",
+    "babel-jest": "^27.2.5",
     "eslint": "7.32.0",
     "eslint-config-next": "11.1.2",
-    "husky": "^7.0.0"
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-testing-library": "^4.12.4",
+    "husky": "^7.0.0",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^27.2.5",
+    "lint-staged": "^11.2.3",
+    "prettier": "2.4.1",
+    "react-test-renderer": "^17.0.2",
+    "webpack": "5"
+  },
+  "lint-staged": {
+    "**/*.js": [
+      "eslint --fix"
+    ],
+    "**/*": [
+      "prettier --write --ignore-unknown"
+    ]
   },
   "volta": {
     "node": "14.18.0",

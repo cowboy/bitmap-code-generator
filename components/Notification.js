@@ -2,6 +2,7 @@ import * as React from 'react'
 import cx from 'classnames'
 
 import styles from './Notification.module.css'
+import { Icon } from './Icon'
 
 export const Notification = ({ state, dispatch }) => {
   const [notificationChanged, setNotificationChanged] = React.useState(false)
@@ -27,8 +28,18 @@ export const Notification = ({ state, dispatch }) => {
   const { type = 'info', message } =
     (!notificationChanged && state.notification) || {}
 
+  const icons = {
+    info: 'fas:info-circle',
+    error: 'fas:exclamation-triangle',
+  }
+
   return (
     <div className={cx(styles.root, styles[type])} onClick={clearNotification}>
+      {message && (
+        <span className={styles.icon}>
+          <Icon icon={icons[type]} />
+        </span>
+      )}
       {message}
     </div>
   )

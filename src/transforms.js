@@ -1,7 +1,7 @@
 import store from 'store2'
-import { encode, decode } from 'js-base64'
-import { formatters } from './formatters'
-import { getDefaultPreset } from 'components/Presets'
+import { defaultFormat, formatters } from './formatters'
+import { stringToBitmapArray } from 'components/Presets'
+import { getShareUrlData } from './share-url-encoder'
 
 const transformStore = store.namespace('transform')
 
@@ -42,117 +42,46 @@ export const getHeightFromArray = (array) => {
   return roundUpToBlockSize(array.length)
 }
 
-export const printBitmap = ({ bitmap }) => {
-  const width = getWidthFromBitmap(bitmap)
-  const digit = (n) => n % 10
-  console.log(
-    [
-      `  ${Array.from({ length: width }, (_, i) => digit(i)).join('')}`,
-      ...bitmap.split('\n').map((s, i) => `${digit(i)}|${s}|`),
-    ].join('\n')
-  )
-}
+// State transformers
 
-export const codeToArray = ({ code, format }) => {
+export const codeToBitmapArray = ({ code, format }) => {
   const {
     name = '',
     arrayStr = '',
-    array = /\S/.test(arrayStr)
-      ? arrayStr
-          .split(/\s*,\s*/)
-          .filter((s, i, { length }) => !(s === '' && i === length - 1))
-          .map((s) => (s === '' ? 0 : parseInt(s)))
-          .map((n) => (isNaN(n) ? 0 : n))
-      : [],
+    bitmapArray = /\S/.test(arrayStr) ? stringToBitmapArray(arrayStr) : [],
   } = formatters[format].fromCode(code.trim()) || {}
-  return { name, array }
+  return { name, bitmapArray }
 }
 
-export const arrayToBitmap = ({ array }) => {
-  const width = getWidthFromArray(array)
-  const bitmap = array
-    .map((n) => {
-      const s = n.toString(2).replace(/0/g, ' ').replace(/1/g, 'x')
-      const padding = ' '.repeat(Math.max(0, width - s.length))
-      return `${padding}${s}`
-    })
-    .join('\n')
-  return { bitmap }
-}
-
-export const bitmapToArray = ({ bitmap }) => {
-  const width = getWidthFromBitmap(bitmap)
-  const array = bitmap.split('\n').map((s) => {
-    s = s.replace(/ /g, '0').replace(/[^0]/g, '1')
-    const padding = '0'.repeat(Math.max(0, width - s.length))
-    s += padding
-    const n = parseInt(s, 2)
-    return isNaN(n) ? 0 : n
-  })
-  return { array }
-}
-
-export const getCode = ({ array, name, format }) => {
-  const width = roundUpToBlockSize(array.map((n) => n.toString(2).length))
-  const hexDigits = (Math.pow(2, width) - 1).toString(16).length
-  const hexValue = (n) => {
-    const hexStr = `${'0'.repeat(hexDigits)}${n.toString(16)}`.slice(-hexDigits)
-    return `0x${hexStr}`
-  }
-  const arrayStr = array.map(hexValue).join(', ')
-  const code = formatters[format].toCode({ name, array, arrayStr })
+export const getCode = ({ name, bitmapArray, format }) => {
+  const code = formatters[format].toCode({ name, bitmapArray })
   return { code }
 }
 
-export const getDimensions = ({ bitmap, array }) => {
-  if (bitmap) {
-    const lines = bitmap.split('\n')
-    const width = roundUpToBlockSize(lines.map((s) => s.length))
-    const height = lines.length
-    return { width, height }
-  }
-  const width = roundUpToBlockSize(array.map((n) => n.toString(2).length))
-  const height = array.length
+export const getDimensions = ({ bitmapArray }) => {
+  const width = Math.max(...bitmapArray.map((row) => row.length))
+  const height = bitmapArray.length
   return { width, height }
 }
 
-export const getShareUrl = ({ name, array }) => {
-  const json = JSON.stringify({ name, array })
-  const bitmapdata = encode(json)
+export const getShareUrl = ({ name, width, height, bitmapArray }) => {
   const href = location.href.replace(/\/share\/.*/, '').replace(/\/$/, '')
-  const url = `${href}/share/${bitmapdata}`
-  return { url }
+  const data = getShareUrlData({ name, width, height, bitmapArray })
+  const shareUrl = `${href}/share/${data}`
+  return { shareUrl }
 }
+
+// Property validators
 
 export const validateName = ({ name }) => {
   name = name.replace(/\W/g, '_')
   return { name }
 }
 
-const defaultPreset = 'robot'
-export const loadInitialData = (bitmapdata) => () => {
-  let notification
-  if (bitmapdata !== undefined) {
-    try {
-      const json = decode(bitmapdata)
-      const { name, array } = JSON.parse(json)
-      return { name, array, loaded: true }
-    } catch (err) {
-      notification = {
-        type: 'error',
-        message: 'There was an error loading the shared image',
-      }
-    }
+export const validateFormat = ({ format = transformStore('format') }) => {
+  if (!formatters[format]) {
+    format = defaultFormat
   }
-  const name = defaultPreset
-  const array = getDefaultPreset(name)
-  return { name, array, notification, loaded: true }
-}
-
-const defaultFormat = 'C++ (GyverMAX7219)'
-export const validateFormat = ({
-  format = transformStore('format') || defaultFormat,
-}) => {
   transformStore('format', format)
   return { format }
 }
@@ -164,4 +93,30 @@ export const validateScale = ({
   scale = Math.max(0.25, Math.min(scale, 2))
   transformStore('scale', scale)
   return { scale }
+}
+
+// Debugging
+
+export const printBitmapArray = ({ bitmapArray }) => {
+  const { length } = bitmapArray[0]
+  const digit = (n) => n % 10
+  console.log(
+    [
+      `  ${Array.from({ length }, (_, i) => digit(i)).join('')}`,
+      ...bitmapArray.map(
+        (row, i) =>
+          `${digit(i)}|${row.map((pixel) => (pixel ? 'x' : ' ')).join('')}|`
+      ),
+    ].join('\n')
+  )
+}
+
+export const printState = (state) => {
+  const replacer = (key, value) => {
+    if (key === 'bitmapArray') {
+      return '(omitted)'
+    }
+    return value
+  }
+  console.log(JSON.stringify(state, replacer, 2))
 }

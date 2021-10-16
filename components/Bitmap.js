@@ -1,16 +1,23 @@
 import * as React from 'react'
 import Favicon from 'react-favicon'
 import cx from 'classnames'
-import {
-  arrayToBitmap,
-  blockSize,
-  roundDownToBlockSize,
-} from '../src/transforms'
+import { blockSize } from 'src/transforms'
+import { numberArrayToBitmapArray } from 'components/Presets'
+import { Icon } from 'components/Icon'
 
 import styles from './Bitmap.module.css'
 
-const blackFavicon =
-  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAklEQVR4AewaftIAAABzSURBVJ3BAXKCABAEsOz9/89bAXWgFqomQe0EtQka1Kkh9moT1E1dGuovdS1iMb5UtRhviTPjLXVmfCtW4y4+k1qNu3oV52ozLtT/xtdiMZ7iM7UYT3UQd3FliFUcFXFTr+JhqFWJX+pEPYydOoqdWMXRD7IJGR9tCTLHAAAAAElFTkSuQmCC'
+const getImageDataUrl = (width, height) => {
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+  const ctx = canvas.getContext('2d')
+  ctx.fillStyle = '#0f0'
+  ctx.fillRect(0, 0, width, height)
+  return canvas.toDataURL('image/png')
+}
+
+const faviconSize = 16
 
 const bgBlank = [
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -33,7 +40,7 @@ const ButtonGroup = ({ name, children }) => (
 )
 
 export const Bitmap = ({
-  bitmap,
+  bitmapArray,
   width,
   height,
   scale,
@@ -41,13 +48,17 @@ export const Bitmap = ({
   onChangeScale,
 }) => {
   const [dragState, setDragState] = React.useState(null)
+  const imageDataUrl = React.useMemo(
+    () => getImageDataUrl(faviconSize, faviconSize),
+    []
+  )
 
   const setScale = (multiplier) => () => {
     onChangeScale(multiplier * scale)
   }
 
   const favicon = (canvas, ctx) => {
-    const size = 16
+    const size = faviconSize
     const arr = new Uint8ClampedArray(4 * size * size)
     const setPixel = (x, y, state) => {
       const i = (y * size + x) * 4
@@ -60,58 +71,37 @@ export const Bitmap = ({
       arr[i + 3] = alpha ? 255 : 0
     }
 
-    const forEachPixel = (bitmap, fn) =>
-      bitmap2arr(bitmap).forEach((row, y) =>
+    const forEachPixel = (bitmapArray, fn) =>
+      bitmapArray.forEach((row, y) =>
         row.forEach((pixel, x) => fn(x, y, pixel))
       )
 
-    const widthMin = width === 8
-    const heightMin = height === 8
-    const bg = widthMin && heightMin ? bgBorder : bgBlank
-    forEachPixel(arrayToBitmap({ array: bg }).bitmap, setPixel)
-    forEachPixel(arrayToBitmap({ array: bgMask }).bitmap, setAlpha)
+    const bg = width <= 12 && height <= 12 ? bgBorder : bgBlank
+    forEachPixel(numberArrayToBitmapArray(bg), setPixel)
+    forEachPixel(numberArrayToBitmapArray(bgMask), setAlpha)
 
-    forEachPixel(bitmap, (x, y, pixel) => {
-      setPixel(x + (widthMin ? 4 : 0), y + (heightMin ? 4 : 0), pixel)
-    })
-
-    const imageData = new ImageData(arr, 16, 16)
-    ctx.putImageData(imageData, 0, 0)
-  }
-
-  const bitmap2arr = (bitmap) =>
-    bitmap.split('\n').map((line) => {
-      if (line.length < width) {
-        line += ' '.repeat(width - line.length)
+    forEachPixel(bitmapArray, (x, y, pixel) => {
+      if (x < size && y < size) {
+        setPixel(
+          x + Math.max(0, Math.floor((size - width) / 2)),
+          y + Math.max(0, Math.floor((size - height) / 2)),
+          pixel
+        )
       }
-      return line.split('').map((s) => (s === ' ' ? false : true))
     })
 
-  const arr2bitmap = (arr) =>
-    arr
-      .map((row) => row.map((pixel) => (pixel ? 'x' : ' ')).join(''))
-      .join('\n')
-
-  const update = (fn) => updater(fn)()
-  const updater = (fn) => () => {
-    const arr = bitmap2arr(bitmap)
-    onChangeBitmap(arr2bitmap(fn(arr) || arr))
+    const imageData = new ImageData(arr, size, size)
+    ctx.putImageData(imageData, 0, 0)
   }
 
   const mouseDown = (x, y) => (event) => {
     event.preventDefault()
-    let state
-    update((arr) => {
-      state = arr[y][x] = !arr[y][x]
-    })
-    setDragState(state)
+    togglePixelOnClick(x, y)
   }
 
   const mouseEnter = (x, y) => () => {
     if (dragState !== null) {
-      update((arr) => {
-        arr[y][x] = dragState
-      })
+      setPixelOnDrag(x, y)
     }
   }
 
@@ -125,44 +115,71 @@ export const Bitmap = ({
     }
   })
 
-  const clearPixel = () => false
-  const invertPixel = (pixel) => !pixel
+  const not = (x) => !x
+  const returnFalse = () => false
 
   const map = (fn) => (arr) => arr.map(fn)
   const shift = (i) => (arr) => [...arr.slice(i), ...arr.slice(0, i)]
   const add = (fn) => (arr) => [...arr, ...fn()]
-  const trim = (i) => (arr) => arr.slice(0, i)
+  const remove = (n) => (arr) => arr.slice(0, Math.max(n, arr.length - n))
+  const setItem = (fn, i) => (arr) =>
+    [...arr.slice(0, i), fn(arr[i]), ...arr.slice(i + 1)]
   const array =
-    (length, fn = clearPixel) =>
+    (length, fn = returnFalse) =>
     () =>
       Array.from({ length }, fn)
 
-  const clear = updater(map(map(clearPixel)))
-  const invert = updater(map(map(invertPixel)))
+  const updater =
+    (fn) =>
+    (...a) =>
+    (...b) => {
+      onChangeBitmap(fn(...a, ...b)(bitmapArray))
+    }
 
-  const shiftL = updater(map(shift(1)))
-  const shiftR = updater(map(shift(-1)))
-  const shiftU = updater(shift(1))
-  const shiftD = updater(shift(-1))
+  const decW = updater((n) => map(remove(n)))
+  const incW = updater((n) => map(add(array(n))))
+  const decH = updater((n) => remove(n))
+  const incH = updater((n) => add(array(n, array(width))))
 
-  const decW = updater(map(trim(roundDownToBlockSize(width - 1))))
-  const incW = updater(map(add(array(blockSize))))
-  const decH = updater(trim(roundDownToBlockSize(height - 1)))
-  const incH = updater(add(array(blockSize, array(width))))
+  const shiftY = updater((i) => shift(i))
+  const shiftX = updater((i) => map(shift(i)))
+
+  const perPixel = updater((fn) => map(map(fn)))
+  const clear = perPixel(returnFalse)
+  const invert = perPixel(not)
+
+  const setPixel = updater((fn, x, y) => setItem(setItem(fn, x), y))
+  const togglePixelOnClick = setPixel((state) => {
+    setDragState(!state)
+    return !state
+  })
+  const setPixelOnDrag = setPixel(() => dragState)
 
   return (
     <>
-      <Favicon url={blackFavicon} renderOverlay={favicon} />
+      <Favicon url={imageDataUrl} renderOverlay={favicon} />
       <div className={styles.buttons}>
         <ButtonGroup>
-          <button onClick={clear}>clear</button>
-          <button onClick={invert}>invert</button>
+          <button onClick={clear} title="Clear all pixels">
+            clear
+          </button>
+          <button onClick={invert} title="Invert all pixels">
+            invert
+          </button>
         </ButtonGroup>
-        <ButtonGroup name="Move">
-          <button onClick={shiftL}>⇦</button>
-          <button onClick={shiftD}>⇩</button>
-          <button onClick={shiftU}>⇧</button>
-          <button onClick={shiftR}>⇨</button>
+        <ButtonGroup name="Shift">
+          <button onClick={shiftX(1)} title="Shift pixels left">
+            <Icon icon="fas:arrow-left" />
+          </button>
+          <button onClick={shiftY(-1)} title="Shift pixels down">
+            <Icon icon="fas:arrow-down" />
+          </button>
+          <button onClick={shiftY(1)} title="Shift pixels up">
+            <Icon icon="fas:arrow-up" />
+          </button>
+          <button onClick={shiftX(-1)} title="Shift pixels right">
+            <Icon icon="fas:arrow-right" />
+          </button>
         </ButtonGroup>
         <ButtonGroup name="Size">
           <span>
@@ -170,22 +187,61 @@ export const Bitmap = ({
           </span>
         </ButtonGroup>
         <ButtonGroup name="Width">
-          <button onClick={decW}>-{blockSize}</button>
-          <button onClick={incW}>+{blockSize}</button>
+          <button
+            onClick={decW(blockSize)}
+            title={`Decrease width by ${blockSize} pixels`}
+          >
+            -{blockSize}
+          </button>
+          <button onClick={decW(1)} title="Decrease width by 1 pixel">
+            -1
+          </button>
+          <button onClick={incW(1)} title="Increase width by 1 pixel">
+            +1
+          </button>
+          <button
+            onClick={incW(blockSize)}
+            title={`Increase width by ${blockSize} pixels`}
+          >
+            +{blockSize}
+          </button>
         </ButtonGroup>
         <ButtonGroup name="Height">
-          <button onClick={decH}>-{blockSize}</button>
-          <button onClick={incH}>+{blockSize}</button>
+          <button
+            onClick={decH(blockSize)}
+            title={`Decrease height by ${blockSize} pixels`}
+          >
+            -{blockSize}
+          </button>
+          <button onClick={decH(1)} title="Decrease height by 1 pixel">
+            -1
+          </button>
+          <button onClick={incH(1)} title="Increase height by 1 pixel">
+            +1
+          </button>
+          <button
+            onClick={incH(blockSize)}
+            title={`Increase height by ${blockSize} pixels`}
+          >
+            +{blockSize}
+          </button>
         </ButtonGroup>
-        <ButtonGroup name="Pixel Scale">
-          <button onClick={setScale(0.5)}>⇩</button>
-          <button onClick={setScale(2)}>⇧</button>
+        <ButtonGroup name="Pixel Size">
+          <button
+            onClick={setScale(0.5)}
+            title="Make pixels smaller (view only)"
+          >
+            <Icon icon="fas:compress-arrows-alt" />
+          </button>
+          <button onClick={setScale(2)} title="Make pixels larger (view only)">
+            <Icon icon="fas:expand-arrows-alt" />
+          </button>
         </ButtonGroup>
       </div>
       <style>{`.${styles.table} { --cell-size: ${30 * scale}px; }`}</style>
       <table className={styles.table}>
         <tbody>
-          {bitmap2arr(bitmap).map((arr, y) => (
+          {bitmapArray.map((arr, y) => (
             <tr key={y} className={styles.row}>
               {arr.map((pixel, x) => (
                 <td
