@@ -8,7 +8,7 @@ export default function Share({ dispatch }) {
 
   React.useEffect(() => {
     if (bitmapdata) {
-      dispatch({ type: 'initialLoad', payload: bitmapdata })
+      dispatch({ type: 'initialLoad', payload: bitmapdata.join('/') })
       router.replace('/')
     }
   }, [dispatch, bitmapdata, router])
