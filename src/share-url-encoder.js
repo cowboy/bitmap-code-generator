@@ -35,9 +35,7 @@ const v2 = (() => {
   }
 
   const bitstringDecode = (encodedData) => {
-    const [name, widthStr, heightStr, chars] = Array.isArray(encodedData)
-      ? encodedData
-      : encodedData.split('/')
+    const [name, widthStr, heightStr, chars] = encodedData.split('/')
     let bitString = ''
     for (let i = 0; i < chars.length; i += 2) {
       const charStr = chars.slice(i, i + 2)
